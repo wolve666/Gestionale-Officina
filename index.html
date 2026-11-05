@@ -270,6 +270,7 @@ div.tot{text-align:right;font-weight:700;margin-top:10px;font-family:var(--fm)}
   .item{padding:12px}
   .job>div:nth-child(2){flex:1 1 100%;text-align:left!important;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 10px;align-items:baseline;margin-top:4px}
   .chk{padding:8px 10px;font-size:.92rem}
+  .job.open{transform:none}
   table.lt{min-width:0}
   table.lt thead{display:none}
   table.lt tr{display:grid;grid-template-columns:minmax(0,1fr) 104px 44px;grid-template-areas:"d c x" "t t t";gap:6px;padding:10px 0;border-bottom:1px solid var(--bd)}
@@ -931,8 +932,17 @@ function jobHover(m,el){
   ]);
   el.appendChild(h("div",{class:"jdet"},[inner]));
   var t=null;
-  el.addEventListener("mouseenter",function(){clearTimeout(t);t=setTimeout(function(){el.classList.add("open")},1000)});
-  el.addEventListener("mouseleave",function(){clearTimeout(t);el.classList.remove("open")});
+  var touch=false,hint=inner.querySelector(".jd-hint");
+  el.addEventListener("pointerdown",function(e){touch=e.pointerType!="mouse"});
+  el.addEventListener("click",function(e){
+    if(!touch||el.classList.contains("open"))return;
+    e.preventDefault();e.stopImmediatePropagation();
+    document.querySelectorAll(".job.open").forEach(function(x){if(x!==el)x.classList.remove("open")});
+    hint.textContent="Tocca di nuovo per aprire la scheda";el.classList.add("open");
+    setTimeout(function(){var r=el.getBoundingClientRect();if(r.bottom>innerHeight)el.scrollIntoView({block:"nearest",behavior:"smooth"})},320);
+  },true);
+  el.addEventListener("mouseenter",function(){if(touch)return;clearTimeout(t);t=setTimeout(function(){hint.textContent="Clicca per aprire la scheda";el.classList.add("open")},1000)});
+  el.addEventListener("mouseleave",function(){clearTimeout(t);if(!touch)el.classList.remove("open")});
   return el;
 }
 function homeWrap(){var o=home(),c=importCard();if(c)o.unshift(c);return o}
@@ -945,6 +955,7 @@ qi.addEventListener("input",function(){S.q=qi.value;if(S.q.trim()){S.sel=null;S.
 document.getElementById("brand").addEventListener("click",function(){S.sel=null;S.view=null;S.pv=null;S.pvPrint=false;S.q="";S.all=false;S.adding=false;render();window.scrollTo(0,0)});
 qi.addEventListener("keydown",function(e){if(e.key=="Escape"){S.q="";render()}});
 
+document.addEventListener("click",function(e){if(!e.target.closest(".job"))document.querySelectorAll(".job.open").forEach(function(x){x.classList.remove("open")})});
 /* ===================== TASTO INDIETRO (cronologia) ===================== */
 var NAV={key:null,stack:[],skip:false,eat:false};
 function navState(){return{sel:S.sel||null,tab:S.tab||null,view:S.view||null,all:!!S.all,pvId:S.pv?(S.pv.id||"__new"):null,pvPrint:!!S.pvPrint,pvFrom:S.pvFrom||null,rp:S.rp?JSON.parse(JSON.stringify(S.rp)):null}}
