@@ -60,6 +60,7 @@ input[type=checkbox]{width:auto;transform:scale(1.4);margin:0 4px;accent-color:v
 .brand{font:700 1.75rem/1 var(--fd);text-transform:uppercase;white-space:nowrap;cursor:pointer;user-select:none}
 .brand span{background:var(--ac);color:var(--acx);padding:0 .15em}
 .tema{flex:0 0 auto;white-space:nowrap}
+.tema .ti{display:none}
 .sync{flex:0 0 auto;font-size:.82rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--mu)}
 .sync::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}
 .sync.ok{color:var(--gl)} .sync.busy{color:var(--yl)} .sync.off{color:var(--rl)}
@@ -256,6 +257,7 @@ div.tot{text-align:right;font-weight:700;margin-top:10px;font-family:var(--fm)}
   .brandrow #q{order:9;flex:1 1 100%;min-width:0;padding:10px 12px}
   .tema{padding:8px 11px;font-size:.9rem}
   .tema .tl{display:none}
+  .tema .ti{display:inline}
   .tema .ti{font-size:1.05rem;line-height:1;font-weight:700}
   .tema{min-width:40px}
   .sync.ok .sl{display:none}
@@ -302,6 +304,10 @@ div.tot{text-align:right;font-weight:700;margin-top:10px;font-family:var(--fm)}
   .pv-row>.pv-seg .seg button{flex:1}
   .sheet-wrap{margin:0 -14px;padding:8px 14px 24px}
 }
+.targa{display:inline-block;font:700 .95rem var(--fm);letter-spacing:.06em;padding:3px 8px;border:2px solid var(--tx);border-radius:5px;background:var(--card);color:var(--tx);white-space:nowrap;align-self:center}
+.targa.sm{font-size:.78rem;padding:1px 6px;border-width:1.5px;margin-top:4px}
+.row>input.targa-in{flex:0 1 140px;min-width:110px;text-transform:uppercase;font-family:var(--fm);letter-spacing:.06em}
+@media (max-width:700px){.row>input.targa-in{flex:1 1 100%}}
 [hidden]{display:none!important}
 .pv-mode button small{color:inherit;opacity:.75}
 .pv-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:520px}
@@ -362,7 +368,7 @@ details>summary{cursor:pointer}
 </style>
 </head>
 <body>
-<div id="bar"><div class="tape" aria-hidden="true"></div><div class="wrapbar"><div class="brandrow"><div class="brand" id="brand" title="Torna ai lavori">Gestionale <span>Officina</span></div><input id="q" type="search" placeholder="Cerca o inserisci cliente: telefono o nome…" autocomplete="off"><span id="sync" class="sync" hidden></span><button type="button" id="installa" class="tema p" hidden>Installa app</button><button type="button" id="tema" class="tema" title="Cambia tema"></button><button type="button" id="utente" class="tema" hidden>Esci</button></div><div id="newbox"></div></div></div>
+<div id="bar"><div class="tape" aria-hidden="true"></div><div class="wrapbar"><div class="brandrow"><div class="brand" id="brand" title="Torna ai lavori">Gestionale <span>Officina</span></div><input id="q" type="search" placeholder="Cerca: nome, telefono o targa…" autocomplete="off"><span id="sync" class="sync" hidden></span><button type="button" id="installa" class="tema p" hidden>Installa app</button><button type="button" id="tema" class="tema" title="Cambia tema"></button><button type="button" id="utente" class="tema" hidden>Esci</button></div><div id="newbox"></div></div></div>
 <main id="app"></main>
 <script>
 (function(){
@@ -389,6 +395,8 @@ function restore(f){var r=new FileReader();r.onload=function(){try{var d=JSON.pa
 
 function phoneKey(s){var d=digits(s);if(d.indexOf("0039")==0)d=d.slice(4);else if(d.length>10&&d.indexOf("39")==0)d=d.slice(2);return d}
 function openClient(c){S.view=null;S.pv=null;S.sel=c.id;S.tab=((c.monopattini||[])[0]||{}).id||null;S.adding=false;S.q="";S.all=false;render()}
+function tnorm(s){return String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"")}
+function targaHits(q){var t=tnorm(q),R=[];if(t.length<2)return R;S.clients.forEach(function(c){(c.monopattini||[]).forEach(function(m){if(m.targa&&tnorm(m.targa).indexOf(t)>-1)R.push({c:c,m:m})})});return R.sort(function(a,b){return tnorm(a.m.targa)==t?-1:tnorm(b.m.targa)==t?1:0})}
 function clientList(list){
   return h("div",{class:"card"},list.length?list.map(function(c){var n=(c.monopattini||[]).length;return h("div",{class:"item",onclick:function(){openClient(c)}},[h("strong",{},[lab(c)]),T((c.nome&&c.telefono?c.telefono+" · ":"")+n+" monopattin"+(n==1?"o":"i"),"mu")])}):[h("p",{class:"mu"},["Nessun cliente trovato."])]);
 }
@@ -402,7 +410,7 @@ function jobSection(i,titolo,vuoto){
   var extra=i==1&&tot?" · da incassare "+eur(L.reduce(function(s,x){return s+Math.max(residuo(x.m),0)},0)):"";
   var kids=[h("h2",{},[ST[i].e+" "+titolo+(i==2?" questa settimana":"")+" ("+tot+")"+extra])];
   if(!L.length)kids.push(h("p",{class:"mu"},[vuoto]));
-  L.forEach(function(x){var c=x.c,m=x.m,d=key(x);kids.push(jobHover(m,h("div",{class:"item job j"+i,onclick:function(){S.sel=c.id;S.tab=m.id;S.adding=false;render()}},[h("div",{},[h("strong",{},[m.nome||"Monopattino"]),h("div",{class:"mu"},[lab(c)+(c.nome&&c.telefono?" · "+c.telefono:"")])]),h("div",{style:"text-align:right"},[T(d?["aperto il ","finito il ","consegnato il "][i]+itDate(d):"","mu"),residuo(m)>0?h("div",{},[h("strong",{},["da saldare "+eur(residuo(m))])]):null])])))});
+  L.forEach(function(x){var c=x.c,m=x.m,d=key(x);kids.push(jobHover(m,h("div",{class:"item job j"+i,onclick:function(){S.sel=c.id;S.tab=m.id;S.adding=false;render()}},[h("div",{},[h("strong",{},[m.nome||"Monopattino"]),h("div",{class:"mu"},[lab(c)+(c.nome&&c.telefono?" · "+c.telefono:"")]),m.targa?h("span",{class:"targa sm"},[m.targa]):null]),h("div",{style:"text-align:right"},[T(d?["aperto il ","finito il ","consegnato il "][i]+itDate(d):"","mu"),residuo(m)>0?h("div",{},[h("strong",{},["da saldare "+eur(residuo(m))])]):null])])))});
   if(i==2)kids.push(h("div",{class:"row",style:"margin-top:6px"},[h("button",{onclick:function(){var n=new Date();S.rp={mode:"mese",y:n.getFullYear(),m:n.getMonth(),d:today()};S.view="rep";render();window.scrollTo(0,0)}},["Vedi tutti nel report →"]),hidden?T(hidden+" consegn"+(hidden==1?"a precedente":"e precedenti")+" nel report","mu"):null]));
   return h("div",{style:"margin-bottom:16px"},kids);
 }
@@ -410,8 +418,11 @@ function home(){
   var q=S.q,nq=norm(q),dq=digits(q),search=!!q.trim();
   var out=[h("div",{class:"row",style:"margin-bottom:12px"},[h("button",{onclick:function(){S.all=!S.all;S.q="";render()}},[S.all?"← Torna ai lavori":"Tutti i clienti"]),h("button",{onclick:function(){S.view="pv";S.pv=null;S.all=false;render()}},["Preventivi di vendita ("+S.prev.length+")"]),h("button",{onclick:function(){S.view="rep";S.all=false;render();window.scrollTo(0,0)}},["Report consegne"]),(search||S.all)?null:h("button",{class:"ord",title:"Cambia ordine",onclick:function(){S.ord=S.ord=="old"?"new":"old";try{localStorage.setItem("officina_ordine",S.ord)}catch(e){}render()}},[S.ord=="old"?"⇅ Più vecchi in alto":"⇅ Più recenti in alto"])])];
   if(search||S.all){
-    var list=S.clients.filter(function(c){if(!search)return true;return norm(c.nome).indexOf(nq)>-1||(dq&&digits(c.telefono).indexOf(dq)>-1)}).sort(function(a,b){return norm(lab(a))<norm(lab(b))?-1:1});
-    out.push(clientList(list));
+    var hasLet=/[a-z]/i.test(q);
+    var list=S.clients.filter(function(c){if(!search)return true;return norm(c.nome).indexOf(nq)>-1||(!hasLet&&dq&&digits(c.telefono).indexOf(dq)>-1)}).sort(function(a,b){return norm(lab(a))<norm(lab(b))?-1:1});
+    var th=search?targaHits(q):[];
+    if(th.length)out.push(h("div",{class:"card"},[h("div",{class:"jd-lbl",style:"margin-bottom:6px"},["Monopattini trovati per targa"])].concat(th.map(function(x){return h("div",{class:"item",onclick:function(){openClient(x.c);S.tab=x.m.id;render()}},[h("div",{},[h("strong",{},[x.m.nome||"Monopattino"]),h("div",{class:"mu"},[lab(x.c)+(x.c.nome&&x.c.telefono?" · "+x.c.telefono:"")])]),h("span",{class:"targa"},[x.m.targa])])}))));
+    if(list.length||!th.length)out.push(clientList(list));
   }else{
     out.push(h("div",{class:"board"},[jobSection(0,"Lavori aperti","Nessun lavoro aperto."),jobSection(1,"Da consegnare","Nessun lavoro da consegnare."),jobSection(2,"Consegnati","Nessun lavoro consegnato.")]));
   }
@@ -424,7 +435,7 @@ function renderNew(){
   nb.textContent="";var q=S.q.trim();if(!q||S.sel)return;
   var isP=/^[\d\s+\-().]+$/.test(q)&&digits(q).length>=3;
   var exact=isP?S.clients.some(function(c){return phoneKey(c.telefono)&&phoneKey(c.telefono)==phoneKey(q)}):S.clients.some(function(c){return norm(c.nome)==norm(q)});
-  if(exact)return;
+  if(exact||targaHits(q).length)return;
   var nome=h("input",{placeholder:"Nome e cognome (facoltativo)",value:isP?"":q}),tel=h("input",{type:"tel",placeholder:"Telefono",value:isP?q:""});
   var msg=h("div");
   function note(text,c,canForce){msg.textContent="";msg.appendChild(h("p",{style:"margin:8px 0 6px;color:var(--dn)"},[text]));var row=[h("button",{onclick:function(){openClient(c)}},["Apri scheda esistente"])];if(canForce)row.push(h("button",{class:"p",onclick:function(){go(true)}},["Crea comunque"]));msg.appendChild(h("div",{class:"row"},row))}
@@ -461,9 +472,10 @@ function client(){
   else{
     m.lavorazioni=m.lavorazioni||[];
     var mn=h("input",{value:m.nome||"",onchange:function(e){m.nome=e.target.value.trim()||m.nome;persist();render()}});
-    var mnote=h("input",{placeholder:"Note (targa, seriale, colore…)",value:m.note||"",onchange:function(e){m.note=e.target.value;persist()}});
+    var mtarga=h("input",{class:"targa-in",placeholder:"Targa",value:m.targa||"",onchange:function(e){var v=e.target.value.trim().toUpperCase().replace(/\s+/g,"");e.target.value=v;m.targa=v;persist()}});
+    var mnote=h("input",{placeholder:"Note (seriale, colore…)",value:m.note||"",onchange:function(e){m.note=e.target.value;persist()}});
     var del=h("button",{class:"d",onclick:function(){if(confirm("Eliminare «"+m.nome+"»?")){c.monopattini=c.monopattini.filter(function(x){return x.id!=m.id});S.tab=null;persist();render()}}},["Elimina"]);
-    body.appendChild(h("div",{class:"row"},[mn,mnote,del]));
+    body.appendChild(h("div",{class:"row"},[mn,mtarga,mnote,del]));
     var st=m.stato||0;
     function setStato(i){
       if(i==st){render();return}
