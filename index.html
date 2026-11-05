@@ -702,7 +702,7 @@ function pvEditor(){
   $("pv-vext").addEventListener("change",function(e){var el=e.target;if(el.dataset.k!="aliq"||!el.dataset.xid)return;var x=q.vext.find(function(y){return y.id==el.dataset.xid});if(x){x.aliq=+el.value;touched()}});
   $("pv-spese").addEventListener("input",function(e){var el=e.target;if(!el.dataset.sid)return;var s=q.spese.find(function(x){return x.id==el.dataset.sid});if(!s)return;var k=el.dataset.k;s[k]=k=="nome"?el.value:k=="aliq"?+el.value:pvNum(el.value);touched()});
   $("pv-spese").addEventListener("change",function(e){var el=e.target;if(el.dataset.k!="aliq")return;var s=q.spese.find(function(x){return x.id==el.dataset.sid});if(s){s.aliq=+el.value;touched()}});
-  $("pv-back").addEventListener("click",function(){var from=S.pvFrom;S.pv=null;if(from&&pvClient(from)){S.view=null;S.sel=from;S.adding=false}render()});
+  $("pv-back").addEventListener("click",function(){if(q.id)pvStore(false);var from=S.pvFrom;S.pv=null;if(from&&pvClient(from)){S.view=null;S.sel=from;S.adding=false}render()});
   $("pv-save").addEventListener("click",function(){if(!q.nome.trim()){$("pv-nome").focus();$("pv-msg").textContent="Scrivi un nome per il preventivo";return}pvStore(true)});
   $("pv-dup").addEventListener("click",function(){var c=pvClone(q);c.id=null;c.numero=null;c.nome=(q.nome||"")+" (copia)";c.data=today();c.stato=0;S.pv=c;render()});
   $("pv-del").addEventListener("click",function(){if(confirm("Eliminare il preventivo «"+(q.nome||"senza nome")+"»?")){S.prev=S.prev.filter(function(x){return x.id!=q.id});persistPv();var from=S.pvFrom;S.pv=null;if(from&&pvClient(from)){S.view=null;S.sel=from}render()}});
@@ -936,7 +936,7 @@ function jobHover(m,el){
   return el;
 }
 function homeWrap(){var o=home(),c=importCard();if(c)o.unshift(c);return o}
-function render(){if(!CL.booted)return;if(qi.value!==S.q)qi.value=S.q;app.textContent="";(S.sel?client():S.view=="rep"?report():S.view=="pv"?(S.pv?(S.pvPrint?pvPrint():pvEditor()):pvList()):homeWrap()).forEach(function(n){app.appendChild(n)});renderNew()}
+function render(){if(!CL.booted)return;if(qi.value!==S.q)qi.value=S.q;app.textContent="";(S.sel?client():S.view=="rep"?report():S.view=="pv"?(S.pv?(S.pvPrint?pvPrint():pvEditor()):pvList()):homeWrap()).forEach(function(n){app.appendChild(n)});renderNew();navAfterRender()}
 qi.addEventListener("input",function(){S.q=qi.value;if(S.q.trim()){S.sel=null;S.adding=false;S.all=false;S.view=null;S.pv=null;S.pvPrint=false}render()});
 (function(){var b=document.getElementById("tema"),L={auto:"◐ Tema: automatico",light:"☀ Tema: chiaro",dark:"☾ Tema: scuro"};
   function cur(){var t=document.documentElement.getAttribute("data-theme");return t||"auto"}
@@ -944,6 +944,31 @@ qi.addEventListener("input",function(){S.q=qi.value;if(S.q.trim()){S.sel=null;S.
   b.addEventListener("click",function(){var n={auto:"light",light:"dark",dark:"auto"}[cur()];if(n=="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",n);try{localStorage.setItem("officina_tema",n)}catch(e){}show()});show()})();
 document.getElementById("brand").addEventListener("click",function(){S.sel=null;S.view=null;S.pv=null;S.pvPrint=false;S.q="";S.all=false;S.adding=false;render();window.scrollTo(0,0)});
 qi.addEventListener("keydown",function(e){if(e.key=="Escape"){S.q="";render()}});
+
+/* ===================== TASTO INDIETRO (cronologia) ===================== */
+var NAV={key:null,stack:[],skip:false,eat:false};
+function navState(){return{sel:S.sel||null,tab:S.tab||null,view:S.view||null,all:!!S.all,pvId:S.pv?(S.pv.id||"__new"):null,pvPrint:!!S.pvPrint,pvFrom:S.pvFrom||null,rp:S.rp?JSON.parse(JSON.stringify(S.rp)):null}}
+function navKey(st){return [st.sel,st.view,st.all,st.pvId,st.pvPrint].join("|")}
+function navAfterRender(){
+  var st=navState(),k=navKey(st);
+  try{
+    if(NAV.key===null){st.y=0;history.replaceState(st,"");NAV.key=k;NAV.stack=[k];return}
+    if(NAV.skip){NAV.skip=false;NAV.key=k;return}
+    if(k===NAV.key){st.y=(history.state||{}).y||0;history.replaceState(st,"");return}
+    if(NAV.stack.length>1&&NAV.stack[NAV.stack.length-2]===k){NAV.eat=true;NAV.key=k;history.back();return}
+    var cur=history.state||{};cur.y=window.scrollY;history.replaceState(cur,"");
+    st.y=0;history.pushState(st,"");NAV.stack.push(k);NAV.key=k;
+  }catch(e){}
+}
+window.addEventListener("popstate",function(e){
+  var st=e.state;if(!st||!CL.booted)return;
+  NAV.stack.pop();if(!NAV.stack.length)NAV.stack=[navKey(st)];
+  if(NAV.eat){NAV.eat=false;return}
+  if(S.pv&&S.pv.id)pvStore(false);
+  S.sel=st.sel;S.tab=st.tab;S.view=st.view;S.all=st.all;S.pvPrint=st.pvPrint;S.pvFrom=st.pvFrom;S.adding=false;S.q="";if(st.rp)S.rp=st.rp;
+  if(st.pvId){if(!S.pv||(S.pv.id||"__new")!==st.pvId){var f=S.prev.find(function(x){return x.id==st.pvId});S.pv=f?pvClone(f):null}}else S.pv=null;
+  NAV.skip=true;render();var y=st.y||0;setTimeout(function(){window.scrollTo(0,y)},0);
+});
 /* ===================== CLOUD (Firebase) ===================== */
 /* >>> INCOLLA QUI LA CONFIGURAZIONE DI FIREBASE (Impostazioni progetto → Le tue app → Configurazione SDK) <<< */
 var FB_CONFIG={apiKey:"AIzaSyAoC-He8K-fwipsjRQGVjf9G9HbeKnd8d4",authDomain:"gestionale-officina-61aa2.firebaseapp.com",projectId:"gestionale-officina-61aa2",storageBucket:"gestionale-officina-61aa2.firebasestorage.app",messagingSenderId:"228527593106",appId:"1:228527593106:web:e437d0bcf8131f06d7b84b"};
