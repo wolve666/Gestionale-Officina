@@ -60,6 +60,12 @@ input[type=checkbox]{width:auto;transform:scale(1.4);margin:0 4px;accent-color:v
 .brand{font:700 1.75rem/1 var(--fd);text-transform:uppercase;white-space:nowrap;cursor:pointer;user-select:none}
 .brand span{background:var(--ac);color:var(--acx);padding:0 .15em}
 .tema{flex:0 0 auto;white-space:nowrap}
+.ver{flex:0 0 auto;padding:3px 8px;border-radius:999px;font:700 .75rem var(--fm);background:var(--sunk);color:var(--mu);border:1px solid var(--bd);white-space:nowrap}
+.ver.new{background:var(--ac);color:var(--acx);border-color:var(--ac);animation:verpulse 1.6s ease-in-out infinite}
+.ver .vm{display:none}
+@media (max-width:700px){.ver .vd{display:none}.ver .vm{display:inline}.brand{flex:0 1 auto}.brandrow #ver{margin-right:auto}}
+@keyframes verpulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--ac) 35%,transparent)}}
+@media (prefers-reduced-motion:reduce){.ver.new{animation:none}}
 .tema .ti{display:none}
 .sync{flex:0 0 auto;font-size:.82rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--mu)}
 .sync::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor}
@@ -368,7 +374,7 @@ details>summary{cursor:pointer}
 </style>
 </head>
 <body>
-<div id="bar"><div class="tape" aria-hidden="true"></div><div class="wrapbar"><div class="brandrow"><div class="brand" id="brand" title="Torna ai lavori">Gestionale <span>Officina</span></div><input id="q" type="search" placeholder="Cerca: nome, telefono o targa…" autocomplete="off"><span id="sync" class="sync" hidden></span><button type="button" id="installa" class="tema p" hidden>Installa app</button><button type="button" id="tema" class="tema" title="Cambia tema"></button><button type="button" id="utente" class="tema" hidden>Esci</button></div><div id="newbox"></div></div></div>
+<div id="bar"><div class="tape" aria-hidden="true"></div><div class="wrapbar"><div class="brandrow"><div class="brand" id="brand" title="Torna ai lavori">Gestionale <span>Officina</span></div><button type="button" id="ver" class="ver" title="Versione dell'app"></button><input id="q" type="search" placeholder="Cerca: nome, telefono o targa…" autocomplete="off"><span id="sync" class="sync" hidden></span><button type="button" id="installa" class="tema p" hidden>Installa app</button><button type="button" id="tema" class="tema" title="Cambia tema"></button><button type="button" id="utente" class="tema" hidden>Esci</button></div><div id="newbox"></div></div></div>
 <main id="app"></main>
 <script>
 (function(){
@@ -968,6 +974,18 @@ document.getElementById("brand").addEventListener("click",function(){S.sel=null;
 qi.addEventListener("keydown",function(e){if(e.key=="Escape"){S.q="";render()}});
 
 document.addEventListener("click",function(e){if(!e.target.closest(".job"))document.querySelectorAll(".job.open").forEach(function(x){x.classList.remove("open")})});
+/* ===================== VERSIONE ===================== */
+var APP_VERSION="9";
+(function(){
+  var b=document.getElementById("ver"),nuova=null;
+  function show(){b.classList.toggle("new",!!nuova);b.innerHTML=nuova?'<span class="vd">v'+APP_VERSION+' → v'+nuova+' · Aggiorna</span><span class="vm">↻ v'+nuova+'</span>':"v"+APP_VERSION;b.title=nuova?"È disponibile la versione "+nuova+": tocca per aggiornare":"Versione "+APP_VERSION+" (la più recente)"}
+  function check(){if(location.protocol!="https:")return;fetch("index.html?v="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():""}).then(function(t){var m=/var APP_VERSION="([^"]+)"/.exec(t||"");nuova=m&&m[1]!==APP_VERSION?m[1]:null;show()}).catch(function(){})}
+  b.onclick=function(){if(!nuova){check();return}
+    var go=function(){location.reload()};
+    if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.map(function(r){return r.update()}))}).then(go,go);else go()};
+  show();check();setInterval(check,30*60*1000);
+  document.addEventListener("visibilitychange",function(){if(document.visibilityState=="visible")check()});
+})();
 /* ===================== TASTO INDIETRO (cronologia) ===================== */
 var NAV={key:null,stack:[],skip:false,eat:false};
 function navState(){return{sel:S.sel||null,tab:S.tab||null,view:S.view||null,all:!!S.all,pvId:S.pv?(S.pv.id||"__new"):null,pvPrint:!!S.pvPrint,pvFrom:S.pvFrom||null,rp:S.rp?JSON.parse(JSON.stringify(S.rp)):null}}
