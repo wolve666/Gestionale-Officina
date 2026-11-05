@@ -952,7 +952,8 @@ function boot(){
   if(!FB_CONFIG.apiKey){screen('<h2>Configurazione mancante</h2><p>Manca la configurazione di Firebase nel file. Incollala nella riga <b>FB_CONFIG</b> e ricarica.</p>');return}
   firebase.initializeApp(FB_CONFIG);
   var db=firebase.firestore();
-  db.enablePersistence({synchronizeTabs:true}).catch(function(){});
+  try{db.settings({experimentalAutoDetectLongPolling:true,merge:true})}catch(e){}
+  db.enablePersistence().catch(function(){});
   var unsub=[];
   firebase.auth().onAuthStateChanged(function(u){
     unsub.forEach(function(f){f()});unsub=[];CL.user=u;CL.booted=false;CL.ready={};CL.known={clienti:{},preventivi:{}};S.clients=[];S.prev=[];S.off={};S.sel=null;S.view=null;S.pv=null;
