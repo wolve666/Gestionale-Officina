@@ -7,7 +7,10 @@
 <meta name="theme-color" content="#171C21">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Officina">
+<meta name="apple-mobile-web-app-title" content="E-Duck">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -62,6 +65,7 @@ input[type=checkbox]{width:auto;transform:scale(1.4);margin:0 4px;accent-color:v
 .sync.ok{color:var(--gl)} .sync.busy{color:var(--yl)} .sync.off{color:var(--rl)}
 .login{max-width:560px;margin:8vh auto;text-align:left;padding:28px}
 .login h2{margin-top:0}
+.login-logo{display:block;width:min(320px,80%);margin:0 auto 14px;border-radius:12px}
 .brand.big{font-size:2.6rem;margin-bottom:14px;cursor:default}
 .imp{border:2px solid var(--ac)}
 .brandrow #q{flex:1;min-width:220px;font-size:1.05rem}
@@ -292,7 +296,7 @@ details>summary{cursor:pointer}
 </style>
 </head>
 <body>
-<div id="bar"><div class="tape" aria-hidden="true"></div><div class="wrapbar"><div class="brandrow"><div class="brand" id="brand" title="Torna ai lavori">Gestionale <span>Officina</span></div><input id="q" type="search" placeholder="Cerca o inserisci cliente: telefono o nome…" autocomplete="off"><span id="sync" class="sync" hidden></span><button type="button" id="tema" class="tema" title="Cambia tema"></button><button type="button" id="utente" class="tema" hidden>Esci</button></div><div id="newbox"></div></div></div>
+<div id="bar"><div class="tape" aria-hidden="true"></div><div class="wrapbar"><div class="brandrow"><div class="brand" id="brand" title="Torna ai lavori">Gestionale <span>Officina</span></div><input id="q" type="search" placeholder="Cerca o inserisci cliente: telefono o nome…" autocomplete="off"><span id="sync" class="sync" hidden></span><button type="button" id="installa" class="tema p" hidden>Installa app</button><button type="button" id="tema" class="tema" title="Cambia tema"></button><button type="button" id="utente" class="tema" hidden>Esci</button></div><div id="newbox"></div></div></div>
 <main id="app"></main>
 <script>
 (function(){
@@ -953,7 +957,7 @@ function boot(){
   firebase.auth().onAuthStateChanged(function(u){
     unsub.forEach(function(f){f()});unsub=[];CL.user=u;CL.booted=false;CL.ready={};CL.known={clienti:{},preventivi:{}};S.clients=[];S.prev=[];S.off={};S.sel=null;S.view=null;S.pv=null;
     var ub=document.getElementById("utente");
-    if(!u){if(ub)ub.hidden=true;screen('<div class="brand big">Gestionale <span>Officina</span></div><p>Accedi con il tuo account Google per vedere clienti, lavori e preventivi, sincronizzati su tutti i dispositivi.</p><div class="row"><button class="p" id="sc-in">Accedi con Google</button></div>');return}
+    if(!u){if(ub)ub.hidden=true;screen('<img src="logo.png" alt="E-Duck Garage" class="login-logo"><p>Accedi con il tuo account Google per vedere clienti, lavori e preventivi, sincronizzati su tutti i dispositivi.</p><div class="row"><button class="p" id="sc-in">Accedi con Google</button></div>');return}
     if(ub){ub.hidden=false;ub.textContent="Esci";ub.title="Collegato come "+u.email}
     CL.db=db;screen('<p>Caricamento dei dati…</p>');
     unsub.push(listen("clienti",function(s){applyCol("clienti",S.clients,s)}));
@@ -964,6 +968,8 @@ function boot(){
 }
 /* ===================== FINE CLOUD ===================== */
 boot();
+if("serviceWorker" in navigator&&location.protocol=="https:")navigator.serviceWorker.register("sw.js").catch(function(){});
+(function(){var ev=null,b=document.getElementById("installa");window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();ev=e;b.hidden=false});b.onclick=function(){if(!ev)return;ev.prompt();ev.userChoice.then(function(){ev=null;b.hidden=true})};window.addEventListener("appinstalled",function(){b.hidden=true})})();
 })();
 </script>
 </body>
