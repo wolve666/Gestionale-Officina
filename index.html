@@ -876,7 +876,7 @@ document.getElementById("brand").addEventListener("click",function(){S.sel=null;
 qi.addEventListener("keydown",function(e){if(e.key=="Escape"){S.q="";render()}});
 /* ===================== CLOUD (Firebase) ===================== */
 /* >>> INCOLLA QUI LA CONFIGURAZIONE DI FIREBASE (Impostazioni progetto → Le tue app → Configurazione SDK) <<< */
-var FB_CONFIG={apiKey:"",authDomain:"",projectId:"",storageBucket:"",messagingSenderId:"",appId:""};
+var FB_CONFIG={apiKey:"AIzaSyAoC-He8K-fwipsjRQGVjf9G9HbeKnd8d4",authDomain:"gestionale-officina-61aa2.firebaseapp.com",projectId:"gestionale-officina-61aa2",storageBucket:"gestionale-officina-61aa2.firebasestorage.app",messagingSenderId:"228527593106",appId:"1:228527593106:web:e437d0bcf8131f06d7b84b"};
 /* >>> FINE CONFIGURAZIONE <<< */
 var CL={db:null,user:null,known:{clienti:{},preventivi:{}},ready:{},writes:0,offline:!navigator.onLine,booted:false,pending:false};
 function stable(o){if(Array.isArray(o))return "["+o.map(stable).join(",")+"]";if(o&&typeof o=="object")return "{"+Object.keys(o).filter(function(k){return o[k]!==undefined}).sort().map(function(k){return JSON.stringify(k)+":"+stable(o[k])}).join(",")+"}";return JSON.stringify(o===undefined?null:o)}
