@@ -543,7 +543,7 @@ function jobSection(i,titolo,vuoto){
   var extra=i==1&&tot?" · da incassare "+eur(L.reduce(function(s,x){return s+Math.max(residuo(x.m),0)},0)):"";
   var kids=[h("h2",{class:"sec-h"},[ST[i].e+" "+titolo+(i==2?" questa settimana":"")+" ("+tot+")"+extra])];
   if(!L.length)kids.push(h("p",{class:"mu"},[vuoto]));
-  L.forEach(function(x){var c=x.c,m=x.m,d=key(x),cf=i<2;kids.push(jobHover(m,h("div",{class:"item job j"+i,onclick:function(){S.sel=c.id;S.tab=m.id;S.adding=false;render()}},[h("div",{},cf?[h("strong",{},[lab(c)]),h("div",{class:"mu"},[(c.nome&&c.telefono?c.telefono+" · ":"")+(m.nome||"Monopattino")]),m.targa?h("span",{class:"targa sm"},[m.targa]):null]:[h("strong",{},[m.nome||"Monopattino"]),h("div",{class:"mu"},[lab(c)+(c.nome&&c.telefono?" · "+c.telefono:"")]),m.targa?h("span",{class:"targa sm"},[m.targa]):null]),h("div",{style:"text-align:right"},[cf?jobAdv(m,i):null,T(d?["aperto il ","finito il ","consegnato il "][i]+itDate(d):"","mu"),residuo(m)>0?h("div",{},[h("strong",{},["da saldare "+eur(residuo(m))])]):null,(m.caricatore||orAttesa(m).length)?h("div",{class:"bdg"},[orAttesa(m).length?orBadge(orAttesa(m).length):null,m.caricatore?carBadge():null]):null])])))});
+  L.forEach(function(x){var c=x.c,m=x.m,d=key(x),cf=i<2;kids.push(jobHover(m,h("div",{class:"item job j"+i,onclick:function(){S.sel=c.id;S.tab=m.id;S.adding=false;render()}},[h("div",{},[h("strong",{},[m.nome||"Monopattino"]),h("div",{class:"mu"},[cf?((m.lavorazioni||[]).slice().sort(function(a,b){return (a.data||"")<(b.data||"")?-1:1}).map(function(l){return l.desc}).filter(Boolean).join(" · ")||"Nessuna lavorazione"):lab(c)+(c.nome&&c.telefono?" · "+c.telefono:"")]),m.targa?h("span",{class:"targa sm"},[m.targa]):null]),h("div",{style:"text-align:right"},[cf?jobAdv(m,i):null,T(d?["aperto il ","finito il ","consegnato il "][i]+itDate(d):"","mu"),residuo(m)>0?h("div",{},[h("strong",{},["da saldare "+eur(residuo(m))])]):null,(m.caricatore||orAttesa(m).length)?h("div",{class:"bdg"},[orAttesa(m).length?orBadge(orAttesa(m).length):null,m.caricatore?carBadge():null]):null])])))});
   if(i==2)kids.push(h("div",{class:"row",style:"margin-top:6px"},[h("button",{onclick:function(){var n=new Date();S.rp={mode:"mese",y:n.getFullYear(),m:n.getMonth(),d:today()};S.view="rep";render();window.scrollTo(0,0)}},["Vedi tutti nel report →"]),hidden?T(hidden+" consegn"+(hidden==1?"a precedente":"e precedenti")+" nel report","mu"):null]));
   return h("div",{style:"margin-bottom:16px"},kids);
 }
@@ -1313,8 +1313,8 @@ function jobHover(m,el){
   var tot=somma(m.lavorazioni,"costo"),acc=somma(m.acconti,"importo"),res=residuo(m);
   var inner=h("div",{class:"jdet-in"},[
     m.note?h("div",{class:"jd-note"},[m.note]):null,
-    h("div",{class:"jd-lbl"},["Lavorazioni"]),
-    lv.length?h("ul",{class:"jd-list"},lv.map(function(l){return h("li",{},[h("span",{class:"jd-d"},[itDate(l.data).slice(0,5)]),h("span",{class:"jd-t"},[l.desc||"—"]),h("span",{class:"jd-c"},[eur(l.costo)])])})):h("p",{class:"mu",style:"margin:0"},["Nessuna lavorazione registrata."]),
+    (m.stato||0)<2&&cc?h("div",{class:"jd-lbl"},["Cliente"]):h("div",{class:"jd-lbl"},["Lavorazioni"]),
+    (m.stato||0)<2&&cc?h("div",{class:"jd-cli"},[h("strong",{},[lab(cc)]),cc.nome&&cc.telefono?h("div",{class:"mu"},[cc.telefono]):null]):lv.length?h("ul",{class:"jd-list"},lv.map(function(l){return h("li",{},[h("span",{class:"jd-d"},[itDate(l.data).slice(0,5)]),h("span",{class:"jd-t"},[l.desc||"—"]),h("span",{class:"jd-c"},[eur(l.costo)])])})):h("p",{class:"mu",style:"margin:0"},["Nessuna lavorazione registrata."]),
     h("div",{class:"jd-sum"},[h("span",{},["Totale "+eur(tot)]),acc?h("span",{},["Acconti "+eur(acc)]):null,h("strong",{style:"color:"+(res>0?"var(--rl)":"var(--gl)")},[res>0?"Da saldare "+eur(res):res==0?"Saldato ✓":"Acconti in eccesso "+eur(-res)])]),
     cc?contatti(function(){return cc.telefono},true,m.stato==1?waPronto(cc,m,true):null):null,
     h("div",{class:"jd-hint"},["Clicca per aprire la scheda"])
@@ -1376,7 +1376,7 @@ function settingsView(){
   prev();return [box];
 }
 /* ===================== VERSIONE ===================== */
-var APP_VERSION="18";
+var APP_VERSION="19";
 (function(){
   var b=document.getElementById("ver"),nuova=null;
   function show(){b.classList.toggle("new",!!nuova);b.innerHTML=nuova?'<span class="vd">v'+APP_VERSION+' → v'+nuova+' · Aggiorna</span><span class="vm">↻ v'+nuova+'</span>':"v"+APP_VERSION;b.title=nuova?"È disponibile la versione "+nuova+": tocca per aggiornare":"Versione "+APP_VERSION+" (la più recente)"}
