@@ -82,7 +82,12 @@ input[type=checkbox]{width:auto;transform:scale(1.4);margin:0 4px;accent-color:v
 .login-logo{display:block;width:min(320px,80%);margin:0 auto 14px;border-radius:12px}
 .brand.big{font-size:2.6rem;margin-bottom:14px;cursor:default}
 .imp{border:2px solid var(--ac)}
-.brandrow #q{flex:1;min-width:220px;font-size:1.05rem}
+.qwrap{flex:1;min-width:220px;display:flex;gap:8px}
+.brandrow #q{flex:1;min-width:0;font-size:1.05rem}
+.impo{flex:0 0 auto;width:46px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.impo svg{width:24px;height:24px}
+.sec-h .sord{margin-left:auto;padding:4px 10px;font:700 1rem var(--fb);line-height:1}
+.sec-h:has(.sord){display:flex;align-items:center;gap:8px}
 #newbox .card{margin:12px 0 0}
 .mu{color:var(--mu);font-size:.92rem}
 .tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:3px solid var(--tx);margin:14px 0}
@@ -267,7 +272,8 @@ div.tot{text-align:right;font-weight:700;margin-top:10px;font-family:var(--fm)}
   .wrapbar{padding:8px 14px}
   .brandrow{gap:8px}
   .brand{font-size:1.25rem;flex:1 1 auto}
-  .brandrow #q{order:9;flex:1 1 100%;min-width:0;padding:10px 12px}
+  .qwrap{order:9;flex:1 1 100%;min-width:0}
+  .brandrow #q{padding:10px 12px}
   .tema{padding:8px 11px;font-size:.9rem}
   .tema .tl{display:none}
   .tema .ti{display:inline}
@@ -501,7 +507,7 @@ details>summary{cursor:pointer}
 </style>
 </head>
 <body>
-<div id="bar"><div class="tape" aria-hidden="true"></div><div class="wrapbar"><div class="brandrow"><div class="brand" id="brand" title="Torna ai lavori"><i class="bw">Gestionale </i><span>EDG</span></div><button type="button" id="ver" class="ver" title="Versione dell'app"></button><input id="q" type="search" placeholder="Cerca: nome, telefono o targa…" autocomplete="off"><span id="sync" class="sync" hidden></span><button type="button" id="installa" class="tema p" hidden>Installa app</button><button type="button" id="tema" class="tema" title="Cambia tema"></button><button type="button" id="utente" class="tema" hidden>Esci</button></div><div id="newbox"></div></div></div>
+<div id="bar"><div class="tape" aria-hidden="true"></div><div class="wrapbar"><div class="brandrow"><div class="brand" id="brand" title="Torna ai lavori"><i class="bw">Gestionale </i><span>EDG</span></div><button type="button" id="ver" class="ver" title="Versione dell'app"></button><div class="qwrap"><input id="q" type="search" placeholder="Cerca: nome, telefono o targa…" autocomplete="off"><button type="button" id="impo" class="impo" title="Impostazioni" aria-label="Impostazioni"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M10.3 1.5h3.4l.5 2.7c.7.2 1.4.5 2 .9l2.3-1.6 2.4 2.4-1.6 2.3c.4.6.7 1.3.9 2l2.7.5v3.4l-2.7.5c-.2.7-.5 1.4-.9 2l1.6 2.3-2.4 2.4-2.3-1.6c-.6.4-1.3.7-2 .9l-.5 2.7h-3.4l-.5-2.7c-.7-.2-1.4-.5-2-.9l-2.3 1.6-2.4-2.4 1.6-2.3c-.4-.6-.7-1.3-.9-2l-2.7-.5v-3.4l2.7-.5c.2-.7.5-1.4.9-2L3.5 5.9l2.4-2.4 2.3 1.6c.6-.4 1.3-.7 2-.9zM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z"/></svg></button></div><span id="sync" class="sync" hidden></span><button type="button" id="installa" class="tema p" hidden>Installa app</button><button type="button" id="tema" class="tema" title="Cambia tema"></button><button type="button" id="utente" class="tema" hidden>Esci</button></div><div id="newbox"></div></div></div>
 <main id="app"></main>
 <script>
 (function(){
@@ -541,7 +547,7 @@ function jobSection(i,titolo,vuoto){
   var hidden=0;if(i==2){var lun=lunediSettimana(),all=L.length;L=L.filter(function(x){return key(x)>=lun});hidden=all-L.length}
   var tot=L.length;
   var extra=i==1&&tot?" · da incassare "+eur(L.reduce(function(s,x){return s+Math.max(residuo(x.m),0)},0)):"";
-  var kids=[h("h2",{class:"sec-h"},[ST[i].e+" "+titolo+(i==2?" questa settimana":"")+" ("+tot+")"+extra])];
+  var kids=[h("h2",{class:"sec-h"},[T(ST[i].e+" "+titolo+(i==2?" questa settimana":"")+" ("+tot+")"+extra),i==0?h("button",{class:"sord",title:S.ord=="old"?"Più vecchi in alto (tocca per invertire)":"Più recenti in alto (tocca per invertire)",onclick:function(e){e.stopPropagation();S.ord=S.ord=="old"?"new":"old";try{localStorage.setItem("officina_ordine",S.ord)}catch(x){}render()}},["⇅"]):null])];
   if(!L.length)kids.push(h("p",{class:"mu"},[vuoto]));
   L.forEach(function(x){var c=x.c,m=x.m,d=key(x),cf=i<2;kids.push(jobHover(m,h("div",{class:"item job j"+i,onclick:function(){S.sel=c.id;S.tab=m.id;S.adding=false;render()}},[h("div",{},[h("strong",{},[m.nome||"Monopattino"]),h("div",{class:"mu"},[cf?((m.lavorazioni||[]).slice().sort(function(a,b){return (a.data||"")<(b.data||"")?-1:1}).map(function(l){return l.desc}).filter(Boolean).join(" · ")||"Nessuna lavorazione"):lab(c)+(c.nome&&c.telefono?" · "+c.telefono:"")]),m.targa?h("span",{class:"targa sm"},[m.targa]):null]),h("div",{style:"text-align:right"},[cf?jobAdv(m,i):null,T(d?["aperto il ","finito il ","consegnato il "][i]+itDate(d):"","mu"),residuo(m)>0?h("div",{},[h("strong",{},["da saldare "+eur(residuo(m))])]):null,(m.caricatore||orAttesa(m).length)?h("div",{class:"bdg"},[orAttesa(m).length?orBadge(orAttesa(m).length):null,m.caricatore?carBadge():null]):null])])))});
   if(i==2)kids.push(h("div",{class:"row",style:"margin-top:6px"},[h("button",{onclick:function(){var n=new Date();S.rp={mode:"mese",y:n.getFullYear(),m:n.getMonth(),d:today()};S.view="rep";render();window.scrollTo(0,0)}},["Vedi tutti nel report →"]),hidden?T(hidden+" consegn"+(hidden==1?"a precedente":"e precedenti")+" nel report","mu"):null]));
@@ -549,7 +555,7 @@ function jobSection(i,titolo,vuoto){
 }
 function home(){
   var q=S.q,nq=norm(q),dq=digits(q),search=!!q.trim();
-  var out=[h("div",{class:"row",style:"margin-bottom:12px"},[h("button",{onclick:function(){S.all=!S.all;S.q="";render()}},[S.all?"← Torna ai lavori":"Tutti i clienti"]),h("button",{onclick:function(){S.view="pv";S.pv=null;S.all=false;render()}},["Preventivi di vendita ("+S.prev.length+")"]),h("button",{onclick:function(){S.view="rep";S.all=false;render();window.scrollTo(0,0)}},["Report consegne"]),h("button",{onclick:function(){S.view="set";S.all=false;render();window.scrollTo(0,0)}},["Impostazioni"]),(search||S.all)?null:h("button",{class:"ord",title:"Cambia ordine",onclick:function(){S.ord=S.ord=="old"?"new":"old";try{localStorage.setItem("officina_ordine",S.ord)}catch(e){}render()}},[S.ord=="old"?"⇅ Più vecchi in alto":"⇅ Più recenti in alto"])])];
+  var out=[h("div",{class:"row",style:"margin-bottom:12px"},[h("button",{onclick:function(){S.all=!S.all;S.q="";render()}},[S.all?"← Lavori":"Clienti"]),h("button",{onclick:function(){S.view="pv";S.pv=null;S.all=false;render()}},["Preventivi ("+S.prev.length+")"]),h("button",{onclick:function(){S.view="rep";S.all=false;render();window.scrollTo(0,0)}},["Report consegne"])])];
   if(search||S.all){
     var hasLet=/[a-z]/i.test(q);
     var list=S.clients.filter(function(c){if(!search)return true;return norm(c.nome).indexOf(nq)>-1||(!hasLet&&dq&&digits(c.telefono).indexOf(dq)>-1)}).sort(function(a,b){return norm(lab(a))<norm(lab(b))?-1:1});
@@ -1344,6 +1350,7 @@ qi.addEventListener("input",function(){S.q=qi.value;if(S.q.trim()){S.sel=null;S.
   b.addEventListener("click",function(){var n={auto:"light",light:"dark",dark:"auto"}[cur()];if(n=="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",n);try{localStorage.setItem("officina_tema",n)}catch(e){}show()});show()})();
 document.getElementById("brand").addEventListener("click",function(){S.sel=null;S.view=null;S.pv=null;S.pvPrint=false;S.q="";S.all=false;S.adding=false;render();window.scrollTo(0,0)});
 qi.addEventListener("keydown",function(e){if(e.key=="Escape"){S.q="";render()}});
+document.getElementById("impo").addEventListener("click",function(){S.view="set";S.sel=null;S.pv=null;S.all=false;S.q="";render();window.scrollTo(0,0)});
 
 document.addEventListener("click",function(e){if(!e.target.closest(".job")){var n=document.querySelectorAll(".job.open");n.forEach(function(x){x.classList.remove("open")});if(n.length)expSync()}});
 /* ===================== IMPOSTAZIONI ===================== */
@@ -1376,7 +1383,7 @@ function settingsView(){
   prev();return [box];
 }
 /* ===================== VERSIONE ===================== */
-var APP_VERSION="19";
+var APP_VERSION="20";
 (function(){
   var b=document.getElementById("ver"),nuova=null;
   function show(){b.classList.toggle("new",!!nuova);b.innerHTML=nuova?'<span class="vd">v'+APP_VERSION+' → v'+nuova+' · Aggiorna</span><span class="vm">↻ v'+nuova+'</span>':"v"+APP_VERSION;b.title=nuova?"È disponibile la versione "+nuova+": tocca per aggiornare":"Versione "+APP_VERSION+" (la più recente)"}
