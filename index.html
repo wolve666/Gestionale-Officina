@@ -86,7 +86,8 @@ input[type=checkbox]{width:auto;transform:scale(1.4);margin:0 4px;accent-color:v
 .brandrow #q{flex:1;min-width:0;font-size:1.05rem}
 .impo{flex:0 0 auto;width:46px;padding:0;display:inline-flex;align-items:center;justify-content:center}
 .impo svg{width:24px;height:24px}
-.sec-h .sord{margin-left:auto;padding:4px 10px;font:700 1rem var(--fb);line-height:1}
+.sec-h .sord{margin-left:auto;margin-right:12px;padding:0;width:30px;height:30px;background:none;border:0;box-shadow:none;color:var(--tx);display:inline-flex;align-items:center;justify-content:center}
+.sec-h .sord svg{width:28px;height:28px}
 .sec-h:has(.sord){display:flex;align-items:center;gap:8px}
 #newbox .card{margin:12px 0 0}
 .mu{color:var(--mu);font-size:.92rem}
@@ -218,7 +219,7 @@ div.tot{text-align:right;font-weight:700;margin-top:10px;font-family:var(--fm)}
 .rp-dc{font-size:.72rem;color:var(--mu)}
 .rp-day.has .rp-dc{color:inherit;opacity:.8}
 .rp-groups{display:flex;flex-direction:column;gap:12px;max-height:620px;overflow:auto}
-.rp-group{border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+.rp-group{border:1px solid var(--bd);border-radius:8px;overflow:hidden;flex-shrink:0}
 .rp-gh{display:flex;gap:10px;align-items:baseline;padding:9px 12px;background:var(--sunk);cursor:pointer;border-bottom:1px solid var(--bd)}
 .rp-gd{font:700 1.05rem var(--fd);text-transform:uppercase;letter-spacing:.02em}
 .rp-gt{margin-left:auto;font-family:var(--fm)}
@@ -547,7 +548,7 @@ function jobSection(i,titolo,vuoto){
   var hidden=0;if(i==2){var lun=lunediSettimana(),all=L.length;L=L.filter(function(x){return key(x)>=lun});hidden=all-L.length}
   var tot=L.length;
   var extra=i==1&&tot?" · da incassare "+eur(L.reduce(function(s,x){return s+Math.max(residuo(x.m),0)},0)):"";
-  var kids=[h("h2",{class:"sec-h"},[T(ST[i].e+" "+titolo+(i==2?" questa settimana":"")+" ("+tot+")"+extra),i==0?h("button",{class:"sord",title:S.ord=="old"?"Più vecchi in alto (tocca per invertire)":"Più recenti in alto (tocca per invertire)",onclick:function(e){e.stopPropagation();S.ord=S.ord=="old"?"new":"old";try{localStorage.setItem("officina_ordine",S.ord)}catch(x){}render()}},["⇅"]):null])];
+  var kids=[h("h2",{class:"sec-h"},[T(ST[i].e+" "+titolo+(i==2?" questa settimana":"")+" ("+tot+")"+extra),i==0?(function(){var b=h("button",{class:"sord",title:S.ord=="old"?"Più vecchi in alto (tocca per invertire)":"Più recenti in alto (tocca per invertire)",onclick:function(e){e.stopPropagation();S.ord=S.ord=="old"?"new":"old";try{localStorage.setItem("officina_ordine",S.ord)}catch(x){}render()}},[]);b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 20V4M3 8l4-4 4 4M17 4v16M13 16l4 4 4-4"/></svg>';return b})():null])];
   if(!L.length)kids.push(h("p",{class:"mu"},[vuoto]));
   L.forEach(function(x){var c=x.c,m=x.m,d=key(x),cf=i<2;kids.push(jobHover(m,h("div",{class:"item job j"+i,onclick:function(){S.sel=c.id;S.tab=m.id;S.adding=false;render()}},[h("div",{},[h("strong",{},[m.nome||"Monopattino"]),h("div",{class:"mu"},[cf?((m.lavorazioni||[]).slice().sort(function(a,b){return (a.data||"")<(b.data||"")?-1:1}).map(function(l){return l.desc}).filter(Boolean).join(" · ")||"Nessuna lavorazione"):lab(c)+(c.nome&&c.telefono?" · "+c.telefono:"")]),m.targa?h("span",{class:"targa sm"},[m.targa]):null]),h("div",{style:"text-align:right"},[cf?jobAdv(m,i):null,T(d?["aperto il ","finito il ","consegnato il "][i]+itDate(d):"","mu"),residuo(m)>0?h("div",{},[h("strong",{},["da saldare "+eur(residuo(m))])]):null,(m.caricatore||orAttesa(m).length)?h("div",{class:"bdg"},[orAttesa(m).length?orBadge(orAttesa(m).length):null,m.caricatore?carBadge():null]):null])])))});
   if(i==2)kids.push(h("div",{class:"row",style:"margin-top:6px"},[h("button",{onclick:function(){var n=new Date();S.rp={mode:"mese",y:n.getFullYear(),m:n.getMonth(),d:today()};S.view="rep";render();window.scrollTo(0,0)}},["Vedi tutti nel report →"]),hidden?T(hidden+" consegn"+(hidden==1?"a precedente":"e precedenti")+" nel report","mu"):null]));
@@ -1383,7 +1384,7 @@ function settingsView(){
   prev();return [box];
 }
 /* ===================== VERSIONE ===================== */
-var APP_VERSION="20";
+var APP_VERSION="21";
 (function(){
   var b=document.getElementById("ver"),nuova=null;
   function show(){b.classList.toggle("new",!!nuova);b.innerHTML=nuova?'<span class="vd">v'+APP_VERSION+' → v'+nuova+' · Aggiorna</span><span class="vm">↻ v'+nuova+'</span>':"v"+APP_VERSION;b.title=nuova?"È disponibile la versione "+nuova+": tocca per aggiornare":"Versione "+APP_VERSION+" (la più recente)"}
@@ -1408,7 +1409,7 @@ function expBack(){
   EXP.on=false;expSync();
 }
 function navState(){return{sel:S.sel||null,tab:S.tab||null,view:S.view||null,all:!!S.all,pvId:S.pv?(S.pv.id||"__new"):null,pvPrint:!!S.pvPrint,pvFrom:S.pvFrom||null,rp:S.rp?JSON.parse(JSON.stringify(S.rp)):null}}
-function navKey(st){return [st.sel,st.view,st.all,st.pvId,st.pvPrint].join("|")}
+function navKey(st){return [st.sel,st.view,st.all,st.pvId,st.pvPrint,st.view=="rep"&&st.rp?st.rp.mode+(st.rp.mode=="giorno"?st.rp.d:""):""].join("|")}
 function navAfterRender(){
   var st=navState(),k=navKey(st);
   try{
