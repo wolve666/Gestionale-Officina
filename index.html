@@ -597,13 +597,15 @@ function renderNew(){
 function client(){
   var c=cur();if(!c){S.sel=null;return home()}
   c.monopattini=c.monopattini||[];
-  var m=c.monopattini.find(function(x){return x.id==S.tab})||c.monopattini[0];
+  function mRec(x){var d=[x.dataConsegna,x.dataFine,x.dataApertura].concat((x.storico||[]).map(function(j){return j.dataConsegna})).filter(Boolean).sort();return (x.stato||0)<2?"9"+(d.pop()||""):(d.pop()||"")}
+  var MO=c.monopattini.slice().sort(function(a,b){return mRec(a)<mRec(b)?1:-1});
+  var m=c.monopattini.find(function(x){return x.id==S.tab})||MO[0];
   if(m)S.tab=m.id;
   var nome=h("input",{value:c.nome||"",placeholder:"Nome (facoltativo se c’è il telefono)",onchange:function(e){var v=e.target.value.trim();if(!v&&!c.telefono){alert("Serve almeno un nome o un telefono.");e.target.value=c.nome||"";return}c.nome=v;persist()}});
   var tel=h("input",{type:"tel",value:c.telefono||"",placeholder:"Telefono",onchange:function(e){var v=e.target.value.trim();if(!v&&!c.nome){alert("Serve almeno un nome o un telefono.");e.target.value=c.telefono||"";return}var kk=phoneKey(v);var other=kk&&S.clients.find(function(x){return x.id!=c.id&&phoneKey(x.telefono)==kk});if(other){alert("Questo numero è già associato a "+lab(other)+".");e.target.value=c.telefono||"";return}c.telefono=v;persist()}});
   var note=h("textarea",{rows:"2",placeholder:"Note sul cliente",onchange:function(e){c.note=e.target.value;persist()}});note.value=c.note||"";
   var top=h("div",{class:"card"},[h("div",{class:"grid"},[nome,tel]),h("div",{style:"margin-top:8px"},[note]),contatti(function(){return c.telefono}),h("div",{class:"row",style:"margin-top:8px"},[h("button",{class:"d",onclick:function(){if(confirm("Eliminare "+lab(c)+" e tutti i suoi monopattini?")){S.clients=S.clients.filter(function(x){return x.id!=c.id});persist();S.prev.forEach(function(q){if(q.clientId==c.id)q.clientId=null});persistPv();S.sel=null;render()}}},["Elimina cliente"])])]);
-  var tabs=h("div",{class:"tabs"},c.monopattini.map(function(x){return h("button",{class:"tab"+(x.id==S.tab&&!S.adding?" on":""),onclick:function(){S.tab=x.id;S.adding=false;render()}},[ST[x.stato||0].e+" "+(x.nome||"Monopattino")])}).concat([h("button",{class:"tab"+(S.adding?" on":""),onclick:function(){S.adding=true;render();var i=document.getElementById("nuovo-m");if(i)i.focus()}},["＋ Monopattino"])]));
+  var tabs=h("div",{class:"tabs"},MO.map(function(x){return h("button",{class:"tab"+(x.id==S.tab&&!S.adding?" on":""),onclick:function(){S.tab=x.id;S.adding=false;render()}},[ST[x.stato||0].e+" "+(x.nome||"Monopattino")])}).concat([h("button",{class:"tab"+(S.adding?" on":""),onclick:function(){S.adding=true;render();var i=document.getElementById("nuovo-m");if(i)i.focus()}},["＋ Monopattino"])]));
   var body=h("div",{class:"card"});
   if(S.adding){
     var ni=h("input",{id:"nuovo-m",placeholder:"Modello (es. Ninebot G30)"});
@@ -623,7 +625,7 @@ function client(){
     var st=m.stato||0,lk=st==2;
     function setStato(i){jobStato(m,i)}
     function dt(lbl,k){var i=h("input",{type:"date",value:m[k]||"",onchange:function(e){m[k]=e.target.value;persist();render()}});i.disabled=lk;return h("label",{class:"dt mu"},[lbl,i])}
-    body.appendChild(lk?h("div",{class:"jlock"},[ST[2].e+" Lavoro chiuso: non si può riaprire. Una nuova lavorazione apre un nuovo lavoro su questo monopattino."]):h("div",{class:"row",style:"margin-top:12px"},ST.map(function(x,i){var cb=h("input",{type:"checkbox",onchange:function(){setStato(i)}});cb.checked=(i==st);return h("label",{class:"chk"},[cb,x.e+" "+x.n])})));
+    body.appendChild(lk?h("div",{class:"jlock"},[ST[2].e+" Consegnato il "+itDate(m.dataConsegna)]):h("div",{class:"row",style:"margin-top:12px"},ST.map(function(x,i){var cb=h("input",{type:"checkbox",onchange:function(){setStato(i)}});cb.checked=(i==st);return h("label",{class:"chk"},[cb,x.e+" "+x.n])})));
     var drow=[dt("Aperto il","dataApertura")];if(st>=1)drow.push(dt("Finito il","dataFine"));if(st==2)drow.push(dt("Consegnato il","dataConsegna"));
     body.appendChild(h("div",{class:"row",style:"margin-top:8px"},drow));
     if(st==1&&digits(c.telefono))body.appendChild(h("div",{class:"crow"},[waPronto(c,m)]));
@@ -637,8 +639,7 @@ function client(){
     });
     var d=h("input",{type:"date",value:today()}),ds=h("input",{placeholder:"Lavorazione eseguita"}),co=h("input",{type:"number",step:"0.01",min:"0",placeholder:"Costo €"});
     var ob=orMonoBox(m);
-    if(lk)ds.placeholder="Nuova lavorazione (apre un nuovo lavoro)";
-    function add(){var t=ds.value.trim();if(!t){ds.focus();return}if(lk&&!confirm("Il lavoro consegnato resta chiuso nello storico e si apre un nuovo lavoro su questo monopattino. Procedo?"))return;newJob(m);m.lavorazioni.push({id:uid(),data:d.value||today(),desc:t,costo:parseFloat(co.value)||0});persist();orAdd(ob.inp.value,{mid:m.id});render()}
+    function add(){var t=ds.value.trim();if(!t){ds.focus();return}newJob(m);m.lavorazioni.push({id:uid(),data:d.value||today(),desc:t,costo:parseFloat(co.value)||0});persist();orAdd(ob.inp.value,{mid:m.id});render()}
     ds.addEventListener("keydown",function(e){if(e.key=="Enter")add()});
     var tot=m.lavorazioni.reduce(function(s,l){return s+(Number(l.costo)||0)},0);
     body.appendChild(h("div",{class:"wrap",style:"margin-top:12px"},[h("table",{class:"lt"},[h("thead",{},[h("tr",{},[h("th",{},["Data"]),h("th",{},["Lavorazione"]),h("th",{},["Costo €"]),h("th")])]),h("tbody",{},rows.length?rows:[h("tr",{},[h("td",{colspan:"4",class:"mu"},["Nessuna lavorazione registrata."])])])])]));
@@ -666,7 +667,7 @@ function client(){
       body.appendChild(h("h2",{},["Storico lavori ("+SL.length+")"]));
       SL.forEach(function(j){var t=somma(j.lavorazioni,"costo");body.appendChild(h("div",{class:"jstor"},[
         h("div",{class:"jstor-h"},[h("strong",{},["Consegnato il "+itDate(j.dataConsegna)]),T("aperto il "+itDate(j.dataApertura),"mu"),h("span",{class:"jd-c",style:"margin-left:auto"},[eur(t)])]),
-        h("ul",{class:"jd-list"},(j.lavorazioni||[]).map(function(l){return h("li",{},[h("span",{class:"jd-d"},[itDate(l.data).slice(0,5)]),h("span",{class:"jd-t"},[l.desc||"—"]),h("span",{class:"jd-c"},[eur(l.costo)])])}))]))});
+        h("ul",{class:"jd-list"},(j.lavorazioni||[]).slice().sort(function(a,b){return (a.data||"")<(b.data||"")?1:-1}).map(function(l){return h("li",{},[h("span",{class:"jd-d"},[itDate(l.data).slice(0,5)]),h("span",{class:"jd-t"},[l.desc||"—"]),h("span",{class:"jd-c"},[eur(l.costo)])])}))]))});
     }
   }
   return [h("div",{class:"row",style:"margin-bottom:12px"},[h("button",{onclick:function(){S.sel=null;S.adding=false;render()}},["← Clienti"])]),top,tabs,body,avClientCard(c),pvClientCard(c)];
@@ -1404,7 +1405,7 @@ function settingsView(){
   prev();return [box];
 }
 /* ===================== VERSIONE ===================== */
-var APP_VERSION="22";
+var APP_VERSION="23";
 (function(){
   var b=document.getElementById("ver"),nuova=null;
   function show(){b.classList.toggle("new",!!nuova);b.innerHTML=nuova?'<span class="vd">v'+APP_VERSION+' → v'+nuova+' · Aggiorna</span><span class="vm">↻ v'+nuova+'</span>':"v"+APP_VERSION;b.title=nuova?"È disponibile la versione "+nuova+": tocca per aggiornare":"Versione "+APP_VERSION+" (la più recente)"}
